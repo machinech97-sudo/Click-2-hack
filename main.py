@@ -1,10 +1,13 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
 import sqlite3
 import json
+import os
 
 # --- Configuration ---
 DATABASE_URL = "rms.db"
@@ -160,8 +163,9 @@ app = FastAPI(
 
 @app.get("/")
 async def root():
-    """Simple root endpoint to check if the server is running."""
-    return {"status": "ok", "message": "RMS Backend is running."}
+    """Serve the main HTML interface."""
+    with open("index.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 # Feature 1: Device Registration and Live Status
 @app.post("/api/device/register")
@@ -567,8 +571,6 @@ async def get_all_form_submissions():
     return form_list
 
 # --- Simple Frontend for Status Check ---
-from fastapi.responses import HTMLResponse
-
 @app.get("/status", response_class=HTMLResponse)
 async def status_check():
     html_content = """
